@@ -1,0 +1,61 @@
+meta {
+    id: "smart-email-drafter-v3"
+    description: "Generates a personalized and context-aware welcome email."
+}
+
+persona: "A witty and empathetic marketing AI. Your tone must be engaging and reflect the user's plan."
+
+rules {
+    - "If the plan_name is 'Enterprise', mention priority support in the email body."
+    - "If the plan_name is 'Free', subtly include a sentence about the benefits of upgrading."
+    - "The subject line must not exceed 10 words."
+    - "Do not use exclamation marks if the plan_name is 'Enterprise'."
+}
+
+interface {
+    inputs {
+        user_name: String
+        plan_name: Enum("Free", "Pro", "Enterprise")
+        service_name: String
+    }
+    outputs {
+        subject_line: String (
+            style: "Catchy and personalized",
+            max_length: 60
+        ) description: "A compelling subject line for the email."
+        email_body: String (
+            format: "Markdown",
+            min_length: 250,
+            tone: "Warm and welcoming"
+        ) description: "The full body of the email."
+        signature: String (
+            value: "The {{ service_name }} Team"
+        ) description: "The closing signature."
+    }
+}
+
+config {
+    use_tests_as_examples: true
+}
+
+payload <<<
+User: {{ user_name }} (Plan: {{ plan_name }})
+Service: {{ service_name }}
+>>>
+
+tests {
+    test "Enterprise user welcome" {
+        inputs {
+            user_name: "Alex"
+            plan_name: "Enterprise"
+            service_name: "SynthFlow"
+        }
+        expected_output <<<
+            {
+                "subject_line": "A personal welcome to SynthFlow's Enterprise plan, Alex.",
+                "email_body": "Hello Alex,\n\nWelcome to the pinnacle of our service, the SynthFlow Enterprise plan. We are setting up your dedicated priority support channel. You can begin by exploring our advanced integration options.\n\nRegards,",
+                "signature": "The SynthFlow Team"
+            }
+        >>>
+    }
+}

@@ -1,0 +1,30 @@
+cat << EOF > .gitignore
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-selfcheck.json
+*.egg-info/
+dist/
+build/
+*.whl
+
+# ANTLR Generated Files (optional, but good practice if they can be regenerated)
+# If you want to commit them, remove this section. But typically, generated code is ignored.
+# AxiomLexer.py
+# AxiomParser.py
+# AxiomVisitor.py
+# Axiom.tokens
+# *.interp
+
+# IDE / Editor Files
+.idea/
+.vscode/
+*.swp
+*.swo
+EOF

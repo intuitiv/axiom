@@ -1,0 +1,34 @@
+{
+  "name": "axiom-language-support",
+  "displayName": "Axiom Language Support",
+  "description": "Syntax highlighting for the Axiom prompt engineering language.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "axiom",
+        "aliases": [
+          "Axiom",
+          "axiom"
+        ],
+        "extensions": [
+          ".axiom"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "axiom",
+        "scopeName": "source.axiom",
+        "path": "./axiom.tmLanguage.json"
+      }
+    ]
+  }
+}

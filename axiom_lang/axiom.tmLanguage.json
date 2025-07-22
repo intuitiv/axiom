@@ -1,0 +1,198 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Axiom",
+  "scopeName": "source.axiom",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#blocks"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.axiom",
+          "match": "//.*"
+        }
+      ]
+    },
+    "blocks": {
+      "patterns": [
+        {
+          "name": "meta.block.axiom",
+          "begin": "\\b(meta|interface|config|rules|tests)\\b\\s*({)",
+          "end": "(})",
+          "beginCaptures": {
+            "1": { "name": "keyword.control.block.axiom" },
+            "2": { "name": "punctuation.definition.block.begin.axiom" }
+          },
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.block.end.axiom" }
+          },
+          "patterns": [
+            { "include": "#comments" },
+            { "include": "#key_value_pair" },
+            { "include": "#rules_list_item" },
+            { "include": "#test_case" },
+            { "include": "#nested_blocks" }
+          ]
+        },
+        {
+          "name": "meta.block.single-line.axiom",
+          "match": "\\b(persona)\\b\\s*(:)\\s*(\".*\")",
+          "captures": {
+            "1": { "name": "keyword.control.block.axiom" },
+            "2": { "name": "punctuation.separator.key-value.axiom" },
+            "3": { "name": "string.quoted.double.axiom" }
+          }
+        },
+        {
+          "name": "meta.block.payload.axiom",
+          "begin": "\\b(payload|expected_output)\\b\\s*(<<<)",
+          "end": "(>>>)",
+          "beginCaptures": {
+            "1": { "name": "keyword.control.block.axiom" },
+            "2": { "name": "punctuation.definition.string.begin.axiom" }
+          },
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.string.end.axiom" }
+          },
+          "contentName": "string.unquoted.multiline.axiom",
+          "patterns": [
+            {
+              "name": "meta.embedded.block.jinja.axiom",
+              "begin": "{{",
+              "end": "}}",
+              "patterns": [
+                { "include": "source.jinja" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "nested_blocks": {
+      "patterns": [
+        {
+          "name": "meta.block.nested.axiom",
+          "begin": "\\b(inputs|outputs|types)\\b\\s*({)",
+          "end": "(})",
+          "beginCaptures": {
+            "1": { "name": "entity.name.tag.axiom" },
+            "2": { "name": "punctuation.definition.block.begin.axiom" }
+          },
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.block.end.axiom" }
+          },
+          "patterns": [
+            { "include": "#comments" },
+            { "include": "#key_value_pair" },
+            { "include": "#field_definition" }
+          ]
+        }
+      ]
+    },
+    "key_value_pair": {
+      "name": "meta.key-value.axiom",
+      "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b\\s*(:)\\s*(\".*?\"|[-+]?[0-9]+(\\.[0-9]+)?|true|false)",
+      "captures": {
+        "1": { "name": "entity.name.variable.axiom" },
+        "2": { "name": "punctuation.separator.key-value.axiom" },
+        "3": {
+          "patterns": [
+            { "name": "string.quoted.double.axiom", "match": "\".*?\"" },
+            { "name": "constant.numeric.axiom", "match": "[-+]?[0-9]+(\\.[0-9]+)?" },
+            { "name": "constant.language.boolean.axiom", "match": "true|false" }
+          ]
+        }
+      }
+    },
+    "rules_list_item": {
+      "name": "meta.rule.axiom",
+      "match": "^\\s*(-)\\s*(\".*\")",
+      "captures": {
+        "1": { "name": "punctuation.definition.list.axiom" },
+        "2": { "name": "string.quoted.double.axiom" }
+      }
+    },
+    "field_definition": {
+      "name": "meta.field.definition.axiom",
+      "begin": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b\\s*(:)",
+      "end": "(?=\\s*[a-zA-Z_]|\\s*})",
+      "beginCaptures": {
+        "1": { "name": "variable.parameter.axiom" },
+        "2": { "name": "punctuation.separator.key-value.axiom" }
+      },
+      "patterns": [
+        { "include": "#type_definition" },
+        { "include": "#directive_block" },
+        { "include": "#description_tag" }
+      ]
+    },
+    "type_definition": {
+      "patterns": [
+        {
+          "name": "storage.type.axiom",
+          "match": "\\b(String|Int|Float|Boolean|Enum|List|[A-Z][a-zA-Z0-9_]*)\\b"
+        },
+        { "name": "punctuation.definition.generic.begin.axiom", "match": "<" },
+        { "name": "punctuation.definition.generic.end.axiom", "match": ">" },
+        { "name": "punctuation.definition.enum.begin.axiom", "match": "\\(" },
+        { "name": "punctuation.definition.enum.end.axiom", "match": "\\)" },
+        { "name": "string.quoted.double.axiom", "match": "\".*?\"" },
+        { "name": "punctuation.separator.comma.axiom", "match": "," }
+      ]
+    },
+    "directive_block": {
+      "name": "meta.directive.block.axiom",
+      "begin": "(\\()",
+      "end": "(\\))",
+      "beginCaptures": { "1": { "name": "punctuation.definition.directive.begin.axiom" } },
+      "endCaptures": { "1": { "name": "punctuation.definition.directive.end.axiom" } },
+      "patterns": [
+        { "include": "#key_value_pair" },
+        { "name": "punctuation.separator.comma.axiom", "match": "," }
+      ]
+    },
+    "description_tag": {
+      "name": "meta.description.axiom",
+      "match": "\\b(description)\\b\\s*(:)\\s*(\".*\")",
+      "captures": {
+        "1": { "name": "keyword.other.description.axiom" },
+        "2": { "name": "punctuation.separator.key-value.axiom" },
+        "3": { "name": "comment.block.documentation.axiom" }
+      }
+    },
+    "test_case": {
+      "name": "meta.test-case.axiom",
+      "begin": "\\b(test)\\b\\s*(\".*\")\\s*({)",
+      "end": "(})",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.test.axiom" },
+        "2": { "name": "string.quoted.double.axiom" },
+        "3": { "name": "punctuation.definition.block.begin.axiom" }
+      },
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.block.end.axiom" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        {
+          "name": "meta.test-inputs.axiom",
+          "begin": "\\b(inputs)\\b\\s*({)",
+          "end": "(})",
+          "beginCaptures": {
+            "1": { "name": "entity.name.tag.axiom" },
+            "2": { "name": "punctuation.definition.block.begin.axiom" }
+          },
+          "endCaptures": { "1": { "name": "punctuation.definition.block.end.axiom" } },
+          "patterns": [ { "include": "#key_value_pair" } ]
+        },
+        { "include": "#blocks" }
+      ]
+    }
+  }
+}
