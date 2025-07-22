@@ -1,8 +1,8 @@
 {
-  "name": "axiom-language-support",
-  "displayName": "Axiom Language Support",
+  "name": "axiom-language",
+  "displayName": "Axiom Prompt Language",
   "description": "Syntax highlighting for the Axiom prompt engineering language.",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.80.0"
   },

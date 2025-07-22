@@ -3,10 +3,10 @@ from pathlib import Path
 from antlr4 import FileStream, CommonTokenStream, ParseTreeWalker
 from jinja2 import Template
 
-# Import generated files
-from AxiomLexer import AxiomLexer
-from AxiomParser import AxiomParser
-from axiom_visitor import AxiomVisitorImpl # Our custom visitor
+from axiom.parser.axiom.parser.AxiomLexer import AxiomLexer
+from axiom.parser.axiom.parser.AxiomParser import AxiomParser
+from axiom.parser.visitor import AxiomVisitorImpl
+
 
 class AxiomSDK:
     def _parse_and_transform(self, filepath: str) -> dict:
