@@ -1,59 +1,52 @@
 grammar Axiom;
 
-// Parser Rules (start with lowercase)
-prompt: block* EOF;
-
-block: meta_block | persona_block | rules_block | interface_block | config_block | payload_block | tests_block;
-
-meta_block: 'meta' '{' meta_field* '}';
-meta_field: KEY ':' STRING;
-
-persona_block: 'persona' ':' STRING;
-
-rules_block: 'rules' '{' rule_item* '}';
+// Parser Rules
+prompt: import_statement* block* EOF;
+import_statement: IMPORT LBRACE import_key (',' import_key)* RBRACE FROM STRING;
+import_key: TYPES | RULES;
+block: meta_block | persona_block | rules_block | interface_block | config_block | payload_block | tests_block | types_block;
+meta_block: META LBRACE meta_field* RBRACE;
+meta_field: ID ':' STRING;
+persona_block: PERSONA ':' STRING;
+rules_block: RULES LBRACE rule_item* RBRACE;
 rule_item: '-' STRING;
-
-interface_block: 'interface' '{' interface_body* '}';
+interface_block: INTERFACE LBRACE interface_body* RBRACE;
 interface_body: types_block | inputs_block | outputs_block;
-
-types_block: 'types' '{' struct_def* '}';
-struct_def: 'struct' KEY '{' field_def* '}';
-
-inputs_block: 'inputs' '{' field_def* '}';
-outputs_block: 'outputs' '{' field_def* '}';
-
-// CORRECTED: The literal 'description' is removed to avoid ambiguity with the KEY token.
-// The visitor will now be responsible for identifying the description key.
-field_def: KEY ':' type_def directive_block? (KEY ':' STRING)?;
-
-directive_block: '(' (directive_pair (',' directive_pair)*)? ')';
-directive_pair: KEY ':' value;
-
-type_def: primitive_type | KEY | enum_def | list_def;
+types_block: TYPES LBRACE struct_def* RBRACE;
+struct_def: STRUCT ID LBRACE field_def* RBRACE;
+inputs_block: INPUTS LBRACE field_def* RBRACE;
+outputs_block: OUTPUTS LBRACE field_def* RBRACE;
+field_def: ID ':' type_def directive_block?;
+directive_block: LPAR (directive_pair (',' directive_pair)*)? RPAR;
+directive_pair: ID ':' value;
+type_def: primitive_type | ID | enum_def | list_def;
 primitive_type: 'String' | 'Float' | 'Int' | 'Boolean';
-enum_def: 'Enum' '(' (STRING (',' STRING)*)? ')';
-list_def: 'List' '<' type_def '>';
-
-config_block: 'config' '{' config_field* '}';
-config_field: KEY ':' value;
-
-payload_block: 'payload' MULTILINE_CONTENT;
-tests_block: 'tests' '{' test_case* '}';
-test_case: 'test' STRING '{' test_field* '}';
-test_field: inputs_test_block | expected_output_block;
-
-inputs_test_block: 'inputs' '{' inputs_test_pair* '}';
-inputs_test_pair: KEY ':' STRING;
-
-expected_output_block: 'expected_output' MULTILINE_CONTENT;
-
-value: STRING | 'true' | 'false' | SIGNED_NUMBER;
-
-// Lexer Rules (start with uppercase)
-KEY: [a-zA-Z_] [a-zA-Z0-9_]*;
+enum_def: ENUM LPAR (STRING (',' STRING)*)? RPAR;
+list_def: LIST '<' type_def '>';
+config_block: CONFIG LBRACE config_field* RBRACE;
+config_field: ID ':' value;
+payload_block: PAYLOAD MULTILINE_CONTENT;
+tests_block: TESTS LBRACE test_case* RBRACE;
+test_case: TEST STRING LBRACE test_field* RBRACE;
+test_field: inputs_test_block | expected_output_block | assert_block;
+inputs_test_block: INPUTS LBRACE inputs_test_pair* RBRACE;
+inputs_test_pair: ID ':' value;
+expected_output_block: EXPECTED_OUTPUT MULTILINE_CONTENT;
+assert_block: ASSERT LBRACE assert_item* RBRACE;
+assert_item: '-' STRING;
+value: STRING | SIGNED_NUMBER | 'true' | 'false' | json_object;
+json_object: LBRACE (json_pair (',' json_pair)*)? RBRACE;
+json_pair: STRING ':' value;
+// --- LEXER RULES ---
+IMPORT: 'import'; FROM: 'from'; META: 'meta'; PERSONA: 'persona'; RULES: 'rules';
+INTERFACE: 'interface'; TYPES: 'types'; STRUCT: 'struct'; INPUTS: 'inputs';
+OUTPUTS: 'outputs'; CONFIG: 'config'; PAYLOAD: 'payload'; TESTS: 'tests';
+TEST: 'test'; EXPECTED_OUTPUT: 'expected_output'; ASSERT: 'assert'; ENUM: 'Enum';
+LIST: 'List';
+LBRACE: '{'; RBRACE: '}'; LPAR: '('; RPAR: ')';
+ID: [a-zA-Z_] [a-zA-Z0-9_]*;
 STRING: '"' (~["\\] | '\\' .)*? '"';
 SIGNED_NUMBER: '-'? [0-9]+ ('.' [0-9]+)?;
 MULTILINE_CONTENT: '<<<' .*? '>>>';
-
 WS: [ \t\r\n]+ -> skip;
 COMMENT: '//' .*? '\n' -> skip;

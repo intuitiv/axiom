@@ -1,0 +1,42 @@
+// welcome_email.axiom
+import { types, rules } from "./shared_definitions.axiom"
+
+meta { id: "welcome-email-v3-final" }
+
+persona: "A friendly onboarding specialist AI."
+
+rules {
+}
+
+interface {
+    inputs {
+        newUser: User
+        service_name: String
+    }
+    outputs {
+        subject_line: String (description: "A compelling subject line for the email.")
+        email_body: String (format: "Markdown", description: "The full body of the email.")
+    }
+}
+
+config { use_tests_as_examples: true }
+
+payload <<<
+User Name: {{ newUser.name }}
+User Plan: {{ newUser.plan }}
+Service: {{ service_name }}
+>>>
+
+tests {
+    test "Pro user welcome" {
+        inputs {
+            newUser: { "id": "u-123", "name": "Alex", "plan": "Free" }
+            service_name: "SynthFlow"
+        }
+        assert {
+            - "contains_substring(output['subject_line'], 'Alex')"
+            - "contains_substring(output['email_body'], 'SynthFlow')"
+            - "contains_substring(output['email_body'], 'Pro')"
+        }
+    }
+}

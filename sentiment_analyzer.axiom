@@ -1,0 +1,52 @@
+meta {
+    id: "sentiment-analyzer-final"
+}
+
+persona: "A neutral and precise data analysis AI."
+
+rules {
+    - "Confidence must be a float between 0.0 and 1.0."
+    - "The 'sentiment' field must be one of: 'Positive', 'Negative', 'Mixed'."
+    - "The AI should strive for a confidence score that accurately reflects the degree of certainty in its sentiment assessment."
+    - "When 'sentiment' is 'Mixed', the AI should prioritize providing a confidence score that is at least 0.7, unless there's a clear imbalance in the reasons provided."
+    - "If 'sentiment' is 'Mixed', and the confidence score is below 0.7, the AI must provide reasons that demonstrably support both positive and negative aspects of the input."
+}
+
+interface {
+    outputs {
+        sentiment: Enum("Positive","Negative","Mixed")
+        confidence: Float
+        reasons: List<String>
+    }
+}
+
+config {
+    use_tests_as_examples: true
+}
+
+payload <<<
+    {{ review_text }}
+>>>
+
+tests {
+    test "High confidence positive review" {
+        inputs {
+            review_text: "This is absolutely the best product I have ever used. Flawless!"
+        }
+        assert {
+            - "output['sentiment'] == 'Positive'"
+            - "output['confidence'] > 0.9"
+            - "contains_substring(output['reasons'], 'flawless')"
+        }
+    }
+    test "Clear mixed review" {
+        inputs {
+            review_text: "The shipping was slow, but the product itself is high quality."
+        }
+        assert {
+            - "output['sentiment'] == 'Mixed'"
+            - "output['confidence'] > 0.8"
+            - "contains_substring(output['reasons'], 'high quality')"
+        }
+    }
+}

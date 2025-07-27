@@ -1,3 +1,4 @@
+// email_drafter.axiom
 meta {
     id: "smart-email-drafter-v3"
     description: "Generates a personalized and context-aware welcome email."

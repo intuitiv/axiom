@@ -1,0 +1,20 @@
+meta { id: "test-validator-demo" }
+persona: "A sentiment analysis AI."
+interface {
+    inputs { text: String }
+    outputs { sentiment: Enum("Positive", "Negative") }
+}
+payload <<<{{text}}>>>
+
+tests {
+    test "A clearly good review" {
+        inputs { text: "This was a wonderful experience, truly fantastic!" }
+        assert { - "output['sentiment'] == 'Positive'" }
+    }
+
+    test "Another clearly good review" {
+        inputs { text: "An amazing time, absolutely wonderful!" }
+        // This is a deliberate contradiction with the previous test
+        assert { - "output['sentiment'] == 'Negative'" }
+    }
+}

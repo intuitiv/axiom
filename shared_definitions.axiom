@@ -1,0 +1,12 @@
+// shared_definitions.axiom
+types {
+    struct User {
+        id: String (description: "The unique identifier for the user.")
+        name: String (description: "The user's first name.")
+        plan: Enum("Free", "Pro", "Enterprise") (description: "The user's subscription plan.")
+    }
+}
+
+rules {
+    - "The tone must always be helpful and respectful."
+}
