@@ -33,10 +33,15 @@ inputs_test_block: INPUTS LBRACE inputs_test_pair* RBRACE;
 inputs_test_pair: ID ':' value;
 expected_output_block: EXPECTED_OUTPUT MULTILINE_CONTENT;
 assert_block: ASSERT LBRACE assert_item* RBRACE;
+
+// CORRECTED: The assertion item is now just a single string.
+// The logic is moved to the visitor.
 assert_item: '-' STRING;
+
 value: STRING | SIGNED_NUMBER | 'true' | 'false' | json_object;
 json_object: LBRACE (json_pair (',' json_pair)*)? RBRACE;
 json_pair: STRING ':' value;
+
 // --- LEXER RULES ---
 IMPORT: 'import'; FROM: 'from'; META: 'meta'; PERSONA: 'persona'; RULES: 'rules';
 INTERFACE: 'interface'; TYPES: 'types'; STRUCT: 'struct'; INPUTS: 'inputs';

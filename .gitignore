@@ -27,4 +27,8 @@ build/
 .vscode/
 *.swp
 *.swo
-EOF
+
+# ANTLR Generated Files
+gen/
+
+.DS_Store

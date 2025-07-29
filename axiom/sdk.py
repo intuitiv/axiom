@@ -121,9 +121,14 @@ class AxiomSDK:
         full_prompt = "\n\n".join(filter(None, [system_prompt_header, persona, rules, output_format, examples_block]))
         return full_prompt.strip()
 
+    @classmethod
+    def log_semantic(cls, sm_check):
+        return ' ~= ' + '"' + sm_check + '"' if sm_check else ''
+
     def _run_single_test(self, test_case: dict, system_prompt: str, user_payload_template: Template):
         """
-        A helper to run one test and return its full result, with improved output formatting.
+        A helper to run one test, now with the correct logic for handling
+        both standard and semantic assertions.
         """
         test_name = test_case['name']
         click.secho(f"\n[RUNNING] Test: \"{test_name}\"", fg='cyan')
@@ -134,26 +139,47 @@ class AxiomSDK:
         click.echo(textwrap.indent(json.dumps(llm_output, indent=2), '    '))
 
         if "error" in llm_output:
-            click.secho(f"  - ❌ FAIL (LLM call failed: {llm_output.get('details')})", fg='red')
+            click.secho(f"  - ❌ FAIL (LLM call failed)", fg='red')
             return test_name, False, "LLM call failed", llm_output
 
         click.echo("  - Evaluating Assertions:")
         for assertion in test_case.get('assert', []):
-            try:
-                context = {"output": llm_output, **assertion_helpers}
-                result = eval(assertion, {"__builtins__": {}}, context)
+            expression = assertion['expression']
+            semantic_check = assertion.get('semantic_check')
 
-                if not result:
-                    # Failure case
-                    click.secho(f"    - ❌ {assertion}", fg='red')
-                    return test_name, False, assertion, llm_output
+            full_assertion_str = f"{expression} {AxiomSDK.log_semantic(semantic_check)}"
+            click.echo(f"    - Checking: {full_assertion_str}")
+
+            try:
+                # Always prepare the context for evaluation
+                context = {"output": llm_output, **assertion_helpers}
+
+                if not semantic_check:
+                    # --- Standard Assertion Path ---
+                    # The expression itself is the entire boolean check.
+                    result = eval(expression, {"__builtins__": {}}, context)
+                    if not result:
+                        click.secho(f"    - ❌ FAILED", fg='red')
+                        return test_name, False, expression, llm_output
+                    else:
+                        click.secho(f"    - ✅ PASSED", fg='green')
                 else:
-                    # Success case
-                    click.secho(f"    - ✅ {assertion}", fg='green')
+                    # --- Semantic Assertion Path ---
+                    # The expression is just the LEFT side, to get the content.
+                    content_to_check = eval(expression, {"__builtins__": {}}, context)
+
+                    validator_prompt = self._construct_semantic_check_prompt(content_to_check, semantic_check)
+                    validation_response = self.llm.execute(validator_prompt, "Validate.")
+
+                    if validation_response.get("isValid") is True:
+                        click.secho(f"    - ✅ SEMANTIC CHECK PASSED", fg='green')
+                    else:
+                        click.secho(f"    - ❌ SEMANTIC CHECK FAILED", fg='red')
+                        return test_name, False, full_assertion_str, llm_output
+
             except Exception as e:
-                # Error case
-                click.secho(f"    - ❌ {assertion} (ERROR: {e})", fg='red')
-                return test_name, False, f"Error evaluating: {assertion}", llm_output
+                click.secho(f"    - ❌ ERROR during evaluation: {e}", fg='red')
+                return test_name, False, f"Error evaluating: {expression}", llm_output
 
         click.secho(f"\n  - ✅ All assertions PASSED for \"{test_name}\"", fg='green', bold=True)
         return test_name, True, None, llm_output
@@ -275,6 +301,16 @@ class AxiomSDK:
                 rule.setdefault('status', 'original')
                 normalized.append(rule)
         return normalized
+
+    def _construct_semantic_check_prompt(self, content_to_check: any, requirement: str) -> str:
+        return f"""You are a precise and strict validation AI. Your task is to determine if a given piece of content satisfies a specific requirement.
+**Content to Analyze:**
+{json.dumps(content_to_check, indent=2)}
+**Requirement to Check:**
+"{requirement}"
+**YOUR TASK:**
+Does the 'Content to Analyze' satisfy the 'Requirement to Check'? Respond with a single, valid JSON object with one key, "isValid", which is a boolean.
+"""
 
     def _construct_brainstorm_meta_prompt(self, p_dict, test, bad_output, failed_assertion):
         """Constructs the NEW "brainstorm" prompt for the meta-LLM."""

@@ -139,4 +139,5 @@ def validate(filepath: str):
     sdk.validate(filepath)
 
 if __name__ == "__main__":
+    _initialize_sdk().improve("financial_bot.axiom", "Refuses to give stock advice")
     cli()

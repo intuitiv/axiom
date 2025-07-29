@@ -81,5 +81,50 @@ clean:
 		  $(OUTPUT_DIR)/AxiomParser.interp
 	@find . -type d -name "__pycache__" -exec rm -r {} +
 
+completion-script:
+	@echo '# Axiom Makefile Completion Script'
+	@echo '_axiom_make_completion() {'
+	@echo '    local cur_word prev_word; cur_word="$${COMP_WORDS[COMP_CWORD]}"; prev_word="$${COMP_WORDS[COMP_CWORD-1]}"'
+	@echo '    if [[ "$$prev_word" == "FILE=" ]]; then'
+	@echo '        COMPREPLY=( $$(compgen -G "*.axiom" -- "$$cur_word") )'
+	@echo '        return 0'
+	@echo '    fi'
+	@echo '    if [[ "$$prev_word" == "TEST_NAME=" ]]; then'
+	@echo '        local axiom_file; for word in "$${COMP_WORDS[@]}"; do if [[ "$$word" == FILE=* ]]; then axiom_file="$${word#*=}"; break; fi; done'
+	@echo '        if [[ -n "$$axiom_file" && -f "$$axiom_file" ]]; then'
+	@echo '            local test_names=$$(grep -oP ''test\\s*\"\\K[^\"]+'' "$$axiom_file")'
+	@echo '            COMPREPLY=( $$(compgen -W "$${test_names}" -- "$$cur_word") )'
+	@echo '        fi'
+	@echo '        return 0'
+	@echo '    fi'
+	@echo '}'
+	@echo 'compdef _axiom_make_completion make'
+
+
 # Phony targets are commands that don't represent actual files.
-.PHONY: all build clean rebuild run test compile
+.PHONY: all build clean rebuild run test compile completion-script improve improve-test generate
+
+help:
+	@echo ""
+	@$(PYTHON_RUN) -c "import click; \
+		click.secho('Axiom Prompt Engineering Framework', bold=True); \
+		print(''); \
+		click.secho('Usage:', bold=True); \
+		print('  make <command> [OPTIONS]'); \
+		print(''); \
+		click.secho('Recommended Setup:', bold=True, fg='yellow'); \
+		print('  For a better experience, add this alias to your ~/.bashrc or ~/.zshrc file:'); \
+		click.secho('    alias axiom-setup=\'eval \"$$(make completion-script)\"\'', fg='cyan'); \
+		print('  Then, run `axiom-setup` once per terminal session to enable smart Tab completion.'); \
+		print(''); \
+		click.secho('Options:', bold=True); \
+		print('  FILE=<filename>         Specify the .axiom file to use (default: sentiment_analyzer.axiom)'); \
+		print('  TEST_NAME=<test_name>   Specify the test name for ''improve-specific'''); \
+		print(''); \
+		click.secho('Workflow Commands:', bold=True); \
+		print('  make test               Run all assertion-based tests for the specified FILE.'); \
+		print('  make improve              Automatically find and fix the first failing test in FILE.'); \
+		print('  make improve-test   Fix a specific failing test in FILE (requires TEST_NAME).'); \
+		print('  make compile            Compile all passing tests in FILE into few-shot examples.'); \
+		print('  make generate           Print the final, compiled system prompt for FILE.'); \
+		print('');"
