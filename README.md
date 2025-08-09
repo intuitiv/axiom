@@ -36,7 +36,7 @@ The core of the Axiom framework is the `.axiom` file—a declarative, self-conta
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repo-url>
+    git clone git@github.com:intuitiv/axiom.git
     cd axiom_project
     ```
 
